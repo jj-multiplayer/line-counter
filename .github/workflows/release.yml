@@ -4,6 +4,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,19 +25,10 @@ jobs:
       - name: Package extension
         run: npm run package
         
-      - name: Get VSIX filename
-        id: get_filename
-        run: |
-          VSIX_FILE=$(ls *.vsix)
-          echo "vsix_file=$VSIX_FILE" >> $GITHUB_OUTPUT
-          
       - name: Upload VSIX to release
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./${{ steps.get_filename.outputs.vsix_file }}
-          asset_name: ${{ steps.get_filename.outputs.vsix_file }}
-          asset_content_type: application/vsix
+        run: |
+          VSIX_FILE=$(ls *.vsix)
+          gh release upload ${{ github.event.release.tag_name }} "$VSIX_FILE" --clobber
 
